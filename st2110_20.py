@@ -6,7 +6,7 @@ class ST2110_20(Packet):
     Attributes:
         __hdr__: Header fields of ST 2110-20.
     """
-
+    
     _ESN_MASK = 0x8000
     _SRD_LEN_MASK = 0x7FFF
     _FIELD_ID_MASK = 0x8000
