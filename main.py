@@ -10,17 +10,17 @@ def main():
     print("Reading PCAP file...")
     f_bars_720p_1 = "pcap/ST2110-20_720p_59_94_color_bars.pcap"
     f_bars_720p_2 = "pcap/ST2110-20_720p_59_94_color_bars_vendor_2.pcap"
-    f = open(f_bars_720p_1, "rb")
+    f = open(f_bars_720p_2, "rb")
     pcap = dpkt.pcap.Reader(f)
     #given data
     video_width = 1280
     video_height = 720
     scan = _PROGRESSIVE
-    depth = 10
+    depth = 8
     sampling = "YCrCb 4:2:2"
     directory = "test-images"
     #data, can be calculated
-    pgroup_size = 5
+    pgroup_size = 4
     pgroup_coverage = 2
     pgroup_order = "CbY0CrY1" #provided: 0 1 2 3
     pixel_components_amount = 4 #amount of pixel components in pgroup
@@ -57,7 +57,7 @@ def main():
                 current_offsets[srd_offset] = srd_offset
             pgroup = int.from_bytes(st_payload[i:i+pgroup_size])
             pixel_comps = []
-            for _ in range(pgroup_size - 1):
+            for _ in range(pixel_components_amount):
                 pixel_mask = (2 << (pgroup_shift - 1)) - 1
                 pixel_comps.append(pgroup & pixel_mask)
                 pgroup >>= pgroup_shift
