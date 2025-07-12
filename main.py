@@ -16,11 +16,11 @@ def main():
     video_width = 1280
     video_height = 720
     scan = _PROGRESSIVE
-    depth = 8
+    depth = 10
     sampling = "YCrCb 4:2:2"
     directory = "test-images"
     #data, can be calculated
-    pgroup_size = 4
+    pgroup_size = 5
     pgroup_coverage = 2
     pgroup_order = "CbY0CrY1" #provided: 0 1 2 3
     pixel_components_amount = 4 #amount of pixel components in pgroup
@@ -43,9 +43,13 @@ def main():
         packet_number += 1
         st_payload = st.payload
         srd_field = st.srd_f
+        srd_len = st.srd_len
         current_offsets = {}
+        current_len = 0
         for i in range(0, len(st_payload), pgroup_size):
             if i + pgroup_size > len(st_payload):
+                break
+            if current_len > srd_len:
                 break
             #processing pgroups
             srd_row = st.srd_row
@@ -75,11 +79,13 @@ def main():
                 pixel_comps[0]
             ]
             current_offsets[srd_offset] += pgroup_coverage
+            srd_len += pgroup_size * 8
         #end of frame or second field/segment
         if ((scan == _INTERLACED and rtp.m == 1 and srd_field == 1) or
             (scan == _PROGRESSIVE and rtp.m == 1)):
             print("Last packet received, saving image...")
             current_offsets = {}
+            #TODO: figure out with OpenCV and sampling
             image_buf = (image_buf / 1023 * 255).astype(np.uint8)  # Convert to 8-bit for display
             converted_buf = cv2.cvtColor(image_buf, cv2.COLOR_YCrCb2BGR)
             cv2.imwrite(f"img-{packet_number}.png", converted_buf)
