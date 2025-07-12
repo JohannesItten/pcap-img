@@ -75,8 +75,6 @@ def test_cv():
         #TODO: check if udp.data is rtp
         amount += 1
         rtp = dpkt.rtp.RTP(udp.data)
-        if (rtp.ts != 264586358): 
-            continue
         #smpte 2110-20 payload header (first 8 bytes of rtp payload)
         #TODO: read about length of ST 2110-20 payload header
         #and true meaning of C bit
@@ -101,10 +99,16 @@ def test_cv():
                 bits_str += bin(smpte_payload_data[i + j])[2:].zfill(8)
             if srd_offset not in current_srd_offset:
                 current_srd_offset[srd_offset] = srd_offset
-            y = int(bits_str[10:20], 2)
-            cb = int(bits_str[:10], 2)
-            cr = int(bits_str[20:30], 2)
-            y2 = int(bits_str[30:40], 2)
+            color_data = []
+            pgroup = int.from_bytes(smpte_payload_data[i:i+5], byteorder='big')
+            for _ in range(4):
+                color_data.append(pgroup & 1023)
+                pgroup >>= 10
+            color_data.reverse()
+            y = color_data[1]
+            cb = color_data[0]
+            cr = color_data[2]
+            y2 = color_data[3]
             image_data[srd_row, current_srd_offset[srd_offset]] = [y, cr, cb]
             image_data[srd_row, current_srd_offset[srd_offset] + 1] = [y2, cr, cb]
             current_srd_offset[srd_offset] += 2
@@ -112,10 +116,11 @@ def test_cv():
             #image_data[srd_row, srd_offset] = [0, 0, 0]
             # ((1 << X) - 1) << startBit get X bits starting from startBit
         if rtp.m == 1:
-            break
-    image_data = (image_data / 1023 * 255).astype(np.uint8)  # Convert to 8-bit for display
-    converted_image = cv2.cvtColor(image_data, cv2.COLOR_YCrCb2BGR)
-    cv2.imwrite("test.png", converted_image)
+            print("Last packet recieved. Saving image...")
+            image_data = (image_data / 1023 * 255).astype(np.uint8)  # Convert to 8-bit for display
+            converted_image = cv2.cvtColor(image_data, cv2.COLOR_YCrCb2BGR)
+            cv2.imwrite("test_" + str(amount) + ".png", converted_image)
+            image_data = np.zeros((720, 1280, 3), dtype=np.uint16)
     print("packets amount: ", amount)
 
 if __name__ == "__main__":
