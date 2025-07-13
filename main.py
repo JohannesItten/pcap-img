@@ -23,10 +23,10 @@ def main():
     #data, can be calculated
     pgroup_size = 5
     pgroup_coverage = 2
-    pgroup_order = "CbY0CrY1" #provided: 0 1 2 3
     pixel_components_amount = 4 #amount of pixel components in pgroup
-    pixel_needed_order = "YCrCb" #needed (1, 2, 0) (3, 2, 0)
     pgroup_shift = pgroup_size * 8 // pixel_components_amount
+    pixel_mask = (2 << (pgroup_shift - 1)) - 1
+    pixel_shift_multipliers = [[2, 1, 3], [0, 1, 3]]
 
     image_buf = np.zeros((video_height, video_width, 3), dtype=np.uint16)
     packet_number = 0
@@ -60,25 +60,14 @@ def main():
             if srd_offset not in current_offsets:
                 current_offsets[srd_offset] = srd_offset
             pgroup = int.from_bytes(st_payload[i:i+pgroup_size])
-            pixel_comps = []
-            for _ in range(pixel_components_amount):
-                pixel_mask = (2 << (pgroup_shift - 1)) - 1
-                pixel_comps.append(pgroup & pixel_mask)
-                pgroup >>= pgroup_shift
-            pixel_comps.reverse()
-            #TODO: remove magic numbers
-            #For YCrCb 10 bit, packet order: CbY0CrY1
-            image_buf[srd_row, current_offsets[srd_offset]] = [
-                pixel_comps[1],
-                pixel_comps[2],
-                pixel_comps[0]
-            ]
-            image_buf[srd_row, current_offsets[srd_offset] + 1] = [
-                pixel_comps[3],
-                pixel_comps[2],
-                pixel_comps[0]
-            ]
-            current_offsets[srd_offset] += pgroup_coverage
+            #Pixel components
+            for multipliers in pixel_shift_multipliers:
+                pixel_comps = []
+                for m in multipliers:
+                    comp = (pgroup >> (m * pgroup_shift)) & pixel_mask
+                    pixel_comps.append(comp)
+                image_buf[srd_row, current_offsets[srd_offset]] = pixel_comps
+                current_offsets[srd_offset] += 1
         #end of frame or second field/segment
         if ((scan == _INTERLACED and rtp.m == 1 and srd_field == 1) or
             (scan == _PROGRESSIVE and rtp.m == 1)):
@@ -87,7 +76,7 @@ def main():
             #TODO: figure out with OpenCV and sampling
             image_buf = (image_buf / 1023 * 255).astype(np.uint8)  # Convert to 8-bit for display
             converted_buf = cv2.cvtColor(image_buf, cv2.COLOR_YCrCb2BGR)
-            cv2.imwrite(f"img-{packet_number}.png", converted_buf)
+            cv2.imwrite(f"test-images/img-{packet_number}.png", converted_buf)
             image_buf = np.zeros((video_height, video_width, 3), dtype=np.uint16)
 
 if __name__ == "__main__":
