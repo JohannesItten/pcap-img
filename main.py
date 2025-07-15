@@ -29,6 +29,10 @@ def process_pcap(video_params):
             continue
         udp = ip.data
         rtp = dpkt.rtp.RTP(udp.data)
+        # TODO: check RTP validity https://www.freesoft.org/CIE/RFC/1889/51.htm
+        # at least i should check rtp.v = 2 and rtp.pt in range [96-127]
+        # https://pub.smpte.org/pub/st2110-10/st2110-10-2022.pdf
+        # https://datatracker.ietf.org/doc/html/rfc4566#section-6
         srd = SampleRowData(rtp.data)
         for segment in srd.segments:
             current_row = segment.row
@@ -49,7 +53,8 @@ def process_pcap(video_params):
                         image_buf[current_row, current_offset] = p
                     except IndexError:
                         if packet_number not in bad_packets:
-                            print(f"Packet {packet_number} skipped...")
+                            print(f"Packet {packet_number} skipped..."
+                                  " Probably incorrect resolution or scan given")
                             bad_packets.append(packet_number)
                     current_offset += 1
             #end of frame or second field/segment
@@ -58,6 +63,7 @@ def process_pcap(video_params):
                 img_name = f"img-{packet_number}.png"
                 print(f"Last packet received, saving image... {img_name}")
                 save_image("test-images", img_name, video.colorspace, video.depth, image_buf)
+                image_buf = np.zeros(image_buf.shape, dtype=np.uint16)
                 saved_images_amount += 1
             if (saved_images_amount <= 0):
                 continue
@@ -68,13 +74,16 @@ def process_pcap(video_params):
 
 
 def save_image(path, name, colorspace, depth, img_buffer):
-    #TODO: figure out with OpenCV and sampling
-    if (depth > 8):
-        # img_buffer = cv2.convertScaleAbs(img_buffer, alpha=(255.0/65535.0))
-        img_buffer = (img_buffer / 1023 * 255).astype(np.uint8)  # Convert to 8-bit for display
-    converted_buf = cv2.cvtColor(img_buffer, cv2.COLOR_YCrCb2BGR)
-    cv2.imwrite(f"{path}/{name}", converted_buf)
-    img_buffer = np.zeros(img_buffer.shape, dtype=np.uint8)
+    conversion_type = cv2.COLOR_YCrCb2BGR
+    if (colorspace == "RGB"):
+        conversion_type = cv2.COLOR_RGB2BGR
+    # Probably should fix it later, color bars must help
+    # i am not sure about color accuracy, due to many conversions
+    if depth < 16:
+        color_multiplier = 1 << (16 - depth)
+        img_buffer = (img_buffer * color_multiplier).astype(np.uint16)
+    img_buffer = cv2.cvtColor(img_buffer, conversion_type)
+    cv2.imwrite(f"{path}/{name}", img_buffer)
 
 def is_resolution_valid(args):
     is_valid = True
@@ -83,11 +92,14 @@ def is_resolution_valid(args):
         is_valid = False
     return is_valid
 
+def create_args():
+    pass
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simple tool to get images from ST-2110-20"
                                      " pcap files."
                                      " Please, notice, that all images will be converted"
-                                     " to 8 bit RGB .png file.",
+                                     " to 16 bit RGB .png file.",
                                      epilog="https://github.com/JohannesItten/pcap-img")
     parser.add_argument("-f", "--filename",
                         help="pcap file absolute path",
