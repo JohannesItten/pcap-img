@@ -1,4 +1,4 @@
-import pgroup_dictionary as pd
+import st_2110_20.pgroup_dictionary as pd
 
 class Pgroup:
     def __init__(self, colorspace, sampling, depth):

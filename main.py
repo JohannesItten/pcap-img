@@ -2,8 +2,8 @@ import sys, argparse
 import dpkt
 import numpy as np
 import cv2
-import pgroup as pg
-from srd import SampleRowData
+import st_2110_20.pgroup as pg
+from st_2110_20.srd import SampleRowData
 
 _INTERLACED = 0
 _PROGRESSIVE = 1
@@ -54,7 +54,7 @@ def process_pcap(video_params):
                     except IndexError:
                         if packet_number not in bad_packets:
                             print(f"Packet {packet_number} skipped..."
-                                  " Probably incorrect resolution or scan given")
+                                  " Probably incorrect video params given")
                             bad_packets.append(packet_number)
                     current_offset += 1
             #end of frame or second field/segment
@@ -85,17 +85,7 @@ def save_image(path, name, colorspace, depth, img_buffer):
     img_buffer = cv2.cvtColor(img_buffer, conversion_type)
     cv2.imwrite(f"{path}/{name}", img_buffer)
 
-def is_resolution_valid(args):
-    is_valid = True
-    if ((args.width <= 0 or args.width > _MAX_ROW_VALUE) or 
-    (args.height <= 0 or args.height > _MAX_ROW_VALUE)):
-        is_valid = False
-    return is_valid
-
-def create_args():
-    pass
-
-if __name__ == "__main__":
+def create_args_parser():
     parser = argparse.ArgumentParser(description="Simple tool to get images from ST-2110-20"
                                      " pcap files."
                                      " Please, notice, that all images will be converted"
@@ -135,9 +125,19 @@ if __name__ == "__main__":
                         type=int,
                         default=-1,
                         required=False)
+    return parser
+
+def is_resolution_valid(args):
+    is_valid = True
+    if ((args.width <= 0 or args.width > _MAX_ROW_VALUE) or 
+    (args.height <= 0 or args.height > _MAX_ROW_VALUE)):
+        is_valid = False
+    return is_valid
+
+if __name__ == "__main__":
+    parser = create_args_parser()
     #TODO: argparse error handling
     args = parser.parse_args()
-    #TODO: add description to help message
     if  not is_resolution_valid(args):
         print(f"Incorrect video width or height. Possible values between 1 and {_MAX_ROW_VALUE}")
         sys.exit(-1)
