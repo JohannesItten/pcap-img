@@ -3,7 +3,7 @@ Simple CLI tool to extract images from ST-2110-20 pcap files. All images will be
 
 ## Usage example
 ```
-python main.py -f pcap/ST2110-20_720p_59_94_color_bars.pcap -vw 1280 -vh 720 -vs p -c YCbCr -s 4:2:2 -d 10 -l 3 -dir test-images
+python main.py -f pcap/ST2110-20_720p_59_94_color_bars.pcap -vw 1280 -vh 720 -vs p -c YCbCr -s 4:2:2 -d 10 -l 3 -dir test-images -pt 96
 ```
 
 ## Known limitations
@@ -22,6 +22,7 @@ The limitations are due to the fact that I do not have access to files with othe
   -d, --depth {8,10,12,16}     bit depth
   -l, --limit LIMIT            image amount limit
   -dir, --directory DIRECTORY  output directory for images
+  -pt, --payload PAYLOAD       needed RTP payload type
 ```
 ## Other notes
 Test files in directory pcap, taken from here:

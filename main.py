@@ -1,4 +1,5 @@
 import sys, argparse, os
+from types import SimpleNamespace
 import dpkt
 import numpy as np
 import cv2
@@ -10,19 +11,23 @@ _INTERLACED = 0
 _PROGRESSIVE = 1
 _MAX_ROW_VALUE = 32767 #max 15 bit value
 
+process_stat = SimpleNamespace()
+process_stat.packet_number = 0
+process_stat.found_payloads = []
+process_stat.saved_images_amount = 0
+
 # TODO: move all printed texts to constants
 def process_pcap(video_params):
     video = video_params
     pgroup = pg.Pgroup(colorspace=video.colorspace,
                        sampling=video.sampling,
                        depth=video.depth)
-    image_buf = np.zeros((video.height, video.width, 3), dtype=np.uint16)
-    packet_number = 0
-    saved_images_amount = 0
-    print("Reading PCAP file...")
+    img_buf = np.zeros((video.height, video.width, 3), dtype=np.uint16)
+    process_stat.packet_number = 0
+    process_stat.saved_images_amount = 0
     pcap = dpkt.pcap.Reader(video.filename)
     for _, buf in pcap:
-        packet_number += 1
+        process_stat.packet_number += 1
         eth = dpkt.ethernet.Ethernet(buf)
         if not isinstance(eth.data, dpkt.ip.IP):
             continue
@@ -36,8 +41,13 @@ def process_pcap(video_params):
         # https://pub.smpte.org/pub/st2110-10/st2110-10-2022.pdf
         # https://datatracker.ietf.org/doc/html/rfc4566#section-6
         if (rtp.version != 2 or rtp.pt < 96 or rtp.pt > 127):
-            print(f"Packet {packet_number} skipped..."
+            print(f"Packet {process_stat.packet_number} skipped..."
                   "Probably not RTP")
+        if rtp.pt not in process_stat.found_payloads:
+            process_stat.found_payloads.append(rtp.pt)
+        # skipping payload type if searched for is user-specified
+        if video.payload > 0 and rtp.pt != video.payload:
+            continue
         srd = SampleRowData(rtp.data)
         for segment in srd.segments:
             current_row = segment.row
@@ -55,25 +65,25 @@ def process_pcap(video_params):
                 pixels = pgroup.get_pixels(segment.data[i:i+pgroup.size])
                 for p in pixels:
                     try:
-                        image_buf[current_row, current_offset] = p
+                        img_buf[current_row, current_offset] = p
                     except IndexError:
-                        if packet_number not in bad_packets:
-                            print(f"Packet {packet_number} skipped..."
+                        if process_stat.packet_number not in bad_packets:
+                            print(f"Packet {process_stat.packet_number} skipped..."
                                   " Probably incorrect video params given")
-                            bad_packets.append(packet_number)
+                            bad_packets.append(process_stat.packet_number)
                     current_offset += 1
             #end of frame or second field/segment
             if ((video.scan == _INTERLACED and rtp.m == 1 and segment.field == 1) or
                 (video.scan == _PROGRESSIVE and rtp.m == 1)):
-                img_name = f"img-{packet_number}.png"
+                img_name = f"img-{process_stat.packet_number}.png"
                 print(f"Last packet received, saving image... {img_name}")
-                save_image(video.directory, img_name, video.colorspace, video.depth, image_buf)
-                image_buf = np.zeros(image_buf.shape, dtype=np.uint16)
-                saved_images_amount += 1
-            if (saved_images_amount <= 0):
+                save_image(video.directory, img_name, video.colorspace, video.depth, img_buf)
+                img_buf = np.zeros(img_buf.shape, dtype=np.uint16)
+                process_stat.saved_images_amount += 1
+            if (process_stat.saved_images_amount <= 0):
                 continue
-            if (saved_images_amount >= video.limit):
-                print(f"Reached image limit, which is: {video.limit}")
+            if (process_stat.saved_images_amount >= video.limit):
+                print(f"Reached image limit: {video.limit}")
                 return
     video.filename.close()
 
@@ -138,6 +148,11 @@ def create_args_parser():
                         help="output directory for images",
                         default=".",
                         required=False)
+    parser.add_argument("-pt", "--payload",
+                        help="needed RTP payload type",
+                        type=int,
+                        default=-1,
+                        required=False)
     return parser
 
 def is_resolution_valid(args):
@@ -158,4 +173,8 @@ if __name__ == "__main__":
         args.scan = _INTERLACED
     elif (args.scan == "p"):
         args.scan = _PROGRESSIVE
+    print("Reading PCAP file...\r\n")
     process_pcap(args)
+    print("\r\nPCAP scan finished."
+          f"\r\nPackets processed: {process_stat.packet_number}"
+          f"\r\nPayloads found: {process_stat.found_payloads}")
