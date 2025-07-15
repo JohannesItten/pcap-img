@@ -57,7 +57,13 @@ pgroup_dictionary = {
     },
     "RGB": {
         "4:2:2": {
-
+            8: {
+                "size": 3,
+                "coverage": 1,
+                "pixel_components_amount": 3,
+                "shift_multipliers": [[2, 1, 0]]
+                #sample order R, G, B
+            },
         },
         "4:4:4": {
 

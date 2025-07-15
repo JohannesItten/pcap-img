@@ -7,7 +7,7 @@ python main.py -f pcap/ST2110-20_720p_59_94_color_bars.pcap -vw 1280 -vh 720 -vs
 ```
 
 ## Known limitations
-Works only with these color spaces: YCbCr and RGB (linear only), except 16f bit depth. Sampling 4:2:0 is also not supported.
+BPM in development. Works only with these color spaces: YCbCr and RGB (linear only), except 16f bit depth. Sampling 4:2:0 is also not supported.
 
 The limitations are due to the fact that I do not have access to files with other parameters at the moment. Therefore, I cannot test the functionality. If you have the opportunity to share the files, please [provide me a link](https://t.me/drunkninja).
 

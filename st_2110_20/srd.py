@@ -65,7 +65,7 @@ class SampleRowData:
     def _get_headers(self, headers_data: bytes):
         headers = []
         for i in range(0, len(headers_data), _SRD_HEADER_SIZE):
-            head = SampleRowDataHeader(data=headers_data)
+            head = SampleRowDataHeader(data=headers_data[i:i+_SRD_HEADER_SIZE])
             headers.append(head)
             if head.continuos == 0:
                 break

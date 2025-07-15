@@ -38,6 +38,7 @@ def process_pcap(video_params):
         if (rtp.version != 2 or rtp.pt < 96 or rtp.pt > 127):
             print(f"Packet {packet_number} skipped..."
                   "Probably not RTP")
+        if rtp.pt != 102: continue
         srd = SampleRowData(rtp.data)
         for segment in srd.segments:
             current_row = segment.row
