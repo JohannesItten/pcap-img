@@ -5,6 +5,7 @@ import cv2
 import st_2110_20.pgroup as pg
 from st_2110_20.srd import SampleRowData
 
+
 _INTERLACED = 0
 _PROGRESSIVE = 1
 _MAX_ROW_VALUE = 32767 #max 15 bit value
@@ -76,7 +77,6 @@ def process_pcap(video_params):
                 return
     video.filename.close()
 
-
 def save_image(directory, name, colorspace, depth, img_buffer):
     if (not os.path.isdir(directory) or
         not os.access(directory, os.W_OK)):
@@ -116,7 +116,7 @@ def create_args_parser():
                         choices=["i", "p"],
                         required=True)
     parser.add_argument("-c", "--colorspace",
-                        help="colorspace",
+                        help="color space",
                         choices=["YCbCr", "RGB"],
                         required=True)
     parser.add_argument("-s", "--sampling",

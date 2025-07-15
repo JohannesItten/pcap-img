@@ -1,15 +1,32 @@
-#Sample Row Data (SRD) header fields
-#esn - Extended Sequence Number (16 bits)
-#srd_len - Sample Row Data Length (16 bits)
-#srd_f - Field Identification Flag (1 bit)
-#srd_row - Sample Row Data Number (15 bits)
-#srd_c - Continuation Flag (1 bit)
-#srd_offset - Sample Row Data Offset (15 bits)
-#... 6 bytes per 1 SRD Header
+"""
+RFC 4175 datagram (https://datatracker.ietf.org/doc/html/rfc4175):
 
+0                   1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| V |P|X|   CC  |M|    PT       |       Sequence Number         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           Time Stamp                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                             SSRC                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|   Extended Sequence Number    |            Length             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|F|          Line No            |C|           Offset            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|            Length             |F|          Line No            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|C|           Offset            |                               .
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               .
+.                                                               .
+.                 Two (partial) lines of video data             .
+.                                                               .
++---------------------------------------------------------------+
 
-#RTP packet shall not contain more, than 3 SRD Headers
-#1 SRD Header = 6 bytes
+RTP packet shall not contain more, than 3 SRD Headers
+1 SRD Header = 6 bytes
+"""
+
 _MAX_SRD_AMOUNT = 3
 _SRD_HEADER_SIZE = 6
 _ESN_SIZE = 2
