@@ -9,6 +9,7 @@ _INTERLACED = 0
 _PROGRESSIVE = 1
 _MAX_ROW_VALUE = 32767 #max 15 bit value
 
+# TODO: move all printed texts to constants
 def process_pcap(video_params):
     video = video_params
     pgroup = pg.Pgroup(colorspace=video.colorspace,
@@ -29,10 +30,13 @@ def process_pcap(video_params):
             continue
         udp = ip.data
         rtp = dpkt.rtp.RTP(udp.data)
-        # TODO: check RTP validity https://www.freesoft.org/CIE/RFC/1889/51.htm
+        # TODO: less lazy RTP validity check https://www.freesoft.org/CIE/RFC/1889/51.htm
         # at least i should check rtp.v = 2 and rtp.pt in range [96-127]
         # https://pub.smpte.org/pub/st2110-10/st2110-10-2022.pdf
         # https://datatracker.ietf.org/doc/html/rfc4566#section-6
+        if (rtp.version != 2 or rtp.pt < 96 or rtp.pt > 127):
+            print(f"Packet {packet_number} skipped..."
+                  "Probably not RTP")
         srd = SampleRowData(rtp.data)
         for segment in srd.segments:
             current_row = segment.row
