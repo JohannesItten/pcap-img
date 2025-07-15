@@ -56,7 +56,7 @@ pgroup_dictionary = {
         }
     },
     "RGB": {
-        "4:2:2": {
+        "4:4:4": {
             8: {
                 "size": 3,
                 "coverage": 1,
@@ -64,9 +64,14 @@ pgroup_dictionary = {
                 "shift_multipliers": [[2, 1, 0]]
                 #sample order R, G, B
             },
+            10: {
+                "size": 15,
+                "coverage": 4,
+                "pixel_components_amount": 12,
+                "shift_multipliers": [[11, 10, 9], [8, 7, 6], [5, 4, 3], [2, 1, 0]]
+                # R0, G0, B0, R1, G1, B1,
+                # R2, G2, B2, R3, G3, B3
+            }
         },
-        "4:4:4": {
-
-        }
     }
 }
