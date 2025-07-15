@@ -1,4 +1,4 @@
-import sys, argparse
+import sys, argparse, os
 import dpkt
 import numpy as np
 import cv2
@@ -62,7 +62,7 @@ def process_pcap(video_params):
                 (video.scan == _PROGRESSIVE and rtp.m == 1)):
                 img_name = f"img-{packet_number}.png"
                 print(f"Last packet received, saving image... {img_name}")
-                save_image("test-images", img_name, video.colorspace, video.depth, image_buf)
+                save_image(video.directory, img_name, video.colorspace, video.depth, image_buf)
                 image_buf = np.zeros(image_buf.shape, dtype=np.uint16)
                 saved_images_amount += 1
             if (saved_images_amount <= 0):
@@ -73,7 +73,11 @@ def process_pcap(video_params):
     video.filename.close()
 
 
-def save_image(path, name, colorspace, depth, img_buffer):
+def save_image(directory, name, colorspace, depth, img_buffer):
+    if (not os.path.isdir(directory) or
+        not os.access(directory, os.W_OK)):
+        print(f"Given directory {directory} for images does not exist or read-only")
+    path = os.path.abspath(directory)
     conversion_type = cv2.COLOR_YCrCb2BGR
     if (colorspace == "RGB"):
         conversion_type = cv2.COLOR_RGB2BGR
@@ -120,10 +124,15 @@ def create_args_parser():
                         type=int,
                         choices=[8, 10, 12, 16],
                         required=True)
+    #optional ars
     parser.add_argument("-l", "--limit",
                         help="image amount limit",
                         type=int,
                         default=-1,
+                        required=False)
+    parser.add_argument("-dir", "--directory",
+                        help="output directory for images",
+                        default=".",
                         required=False)
     return parser
 
