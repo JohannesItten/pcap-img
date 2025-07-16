@@ -30,3 +30,6 @@ The limitations are due to the fact that I do not have access to files with othe
 ## Other notes
 Test files in directory pcap, taken from here:
 [PCAP Zoo](https://github.com/NEOAdvancedTechnology/ST2110_pcap_zoo)
+
+In 'interesting-pcap' directory you can find some fun .pcap files with strange resolution
+and rare parameters, like 3 SRD Headers in 1 RTP packet. Most of them generated with help of GStreamer.
