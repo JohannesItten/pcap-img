@@ -90,7 +90,7 @@ def process_pcap(video_params):
             process_stat.saved_images_amount += 1
         if (process_stat.saved_images_amount <= 0):
             continue
-        if (process_stat.saved_images_amount >= video.limit):
+        if (video.limit > 0 and process_stat.saved_images_amount >= video.limit):
             print(f"Reached image limit: {video.limit}")
             return
     video.filename.close()
