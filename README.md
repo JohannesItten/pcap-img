@@ -7,7 +7,10 @@ python main.py -f pcap/ST2110-20_720p_59_94_color_bars.pcap -vw 1280 -vh 720 -vs
 ```
 
 ## Known limitations
-Works only with these color spaces: YCbCr and RGB (linear only), except 16f bit depth. Sampling 4:2:0 is also not supported.
+Currently support only:
+- YCbCr 4:2:2 8 bit
+- YCbCr 4:2:2 10 bit
+- RGB   4:4:4 8 bit
 
 The limitations are due to the fact that I do not have access to files with other parameters at the moment. Therefore, I cannot test the functionality. If you have the opportunity to share the files, please [provide me a link](https://t.me/drunkninja).
 
@@ -19,7 +22,7 @@ The limitations are due to the fact that I do not have access to files with othe
   -vs, --scan {i,p}            video scan
   -c, --colorspace {YCbCr,RGB} colorspace
   -s, --sampling {4:2:2,4:4:4} sampling
-  -d, --depth {8,10,12,16}     bit depth
+  -d, --depth {8,10}           bit depth
   -l, --limit LIMIT            image amount limit
   -dir, --directory DIRECTORY  output directory for images
   -pt, --payload PAYLOAD       needed RTP payload type

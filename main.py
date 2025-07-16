@@ -136,7 +136,7 @@ def create_args_parser():
     parser.add_argument("-d", "--depth",
                         help="bit depth",
                         type=int,
-                        choices=[8, 10, 12, 16],
+                        choices=[8, 10],
                         required=True)
     #optional ars
     parser.add_argument("-l", "--limit",
