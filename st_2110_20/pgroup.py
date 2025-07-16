@@ -8,6 +8,9 @@ class Pgroup:
         self.depth = depth
         #TODO: process Not Found Data For Colorspace And Sampling Error
         pgroup_table_values = self._get_pgroup_table_values()
+        if pgroup_table_values is None:
+            self._init_empty()
+            return
         self.size = pgroup_table_values["size"]
         self.pixel_amount = pgroup_table_values["coverage"]
         self.pixel_components_amount = pgroup_table_values["pixel_components_amount"]
@@ -15,13 +18,23 @@ class Pgroup:
         self.shift = self.size * 8 // self.pixel_components_amount
         self.pixel_mask = (2 << (self.shift - 1)) - 1
 
+    def _init_empty(self):
+        self.size = 0
+        self.pixel_amount = 0
+        self.pixel_components_amount = 0
+        self.shift_multipliers = []
+        self.shift = 0
+        self.pixel_mask = 0
+
     def _get_pgroup_table_values(self):
         try:
             return pd.pgroup_dictionary[self.colorspace][self.sampling][self.depth]
-        except IndexError:
-            print(f"Table for {self.colorspace}-{self.sampling} {self.depth} bit Not Found")
+        except KeyError:
             return None
-        
+    
+    def is_valid(self):
+        return self.size > 0
+    
     def get_pixels(self, pgroup_bytes):
         pixels = []
         #due to ST-2110-20 data is always Big Endian

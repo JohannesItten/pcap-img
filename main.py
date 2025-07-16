@@ -22,10 +22,18 @@ def process_pcap(video_params):
     pgroup = pg.Pgroup(colorspace=video.colorspace,
                        sampling=video.sampling,
                        depth=video.depth)
+    if not pgroup.is_valid():
+        print(f"'{video.colorspace} {video.sampling} {video.depth} bit' currently not supported")
+        sys.exit(-1)
     img_buf = np.zeros((video.height, video.width, 3), dtype=np.uint16)
     process_stat.packet_number = 0
     process_stat.saved_images_amount = 0
-    pcap = dpkt.pcap.Reader(video.filename)
+    try:
+        pcap = dpkt.pcap.Reader(video.filename)
+    except ValueError:
+        print(f"Provided file is not a valid .pcap file")
+        video.filename.close()
+        sys.exit(-1)
     for _, buf in pcap:
         process_stat.packet_number += 1
         eth = dpkt.ethernet.Ethernet(buf)
@@ -175,6 +183,7 @@ if __name__ == "__main__":
         args.scan = _PROGRESSIVE
     print("Reading PCAP file...\r\n")
     process_pcap(args)
+    args.filename.close()
     print("\r\nPCAP scan finished."
           f"\r\nPackets processed: {process_stat.packet_number}"
           f"\r\nPayloads found: {process_stat.found_payloads}")
