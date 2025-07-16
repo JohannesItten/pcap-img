@@ -80,19 +80,19 @@ def process_pcap(video_params):
                                   " Probably incorrect video params given")
                             bad_packets.append(process_stat.packet_number)
                     current_offset += 1
-            #end of frame or second field/segment
-            if ((video.scan == _INTERLACED and rtp.m == 1 and segment.field == 1) or
-                (video.scan == _PROGRESSIVE and rtp.m == 1)):
-                img_name = f"img-{process_stat.packet_number}.png"
-                print(f"Last packet received, saving image... {img_name}")
-                save_image(video.directory, img_name, video.colorspace, video.depth, img_buf)
-                img_buf = np.zeros(img_buf.shape, dtype=np.uint16)
-                process_stat.saved_images_amount += 1
-            if (process_stat.saved_images_amount <= 0):
-                continue
-            if (process_stat.saved_images_amount >= video.limit):
-                print(f"Reached image limit: {video.limit}")
-                return
+        #end of frame or second field/segment
+        if ((video.scan == _INTERLACED and rtp.m == 1 and segment.field == 1) or
+            (video.scan == _PROGRESSIVE and rtp.m == 1)):
+            img_name = f"img-{process_stat.packet_number}.png"
+            print(f"Last packet received, saving image... {img_name}")
+            save_image(video.directory, img_name, video.colorspace, video.depth, img_buf)
+            img_buf = np.zeros(img_buf.shape, dtype=np.uint16)
+            process_stat.saved_images_amount += 1
+        if (process_stat.saved_images_amount <= 0):
+            continue
+        if (process_stat.saved_images_amount >= video.limit):
+            print(f"Reached image limit: {video.limit}")
+            return
     video.filename.close()
 
 def save_image(directory, name, colorspace, depth, img_buffer):
@@ -146,7 +146,7 @@ def create_args_parser():
                         type=int,
                         choices=[8, 10],
                         required=True)
-    #optional ars
+    #optional args
     parser.add_argument("-l", "--limit",
                         help="image amount limit",
                         type=int,
@@ -172,7 +172,6 @@ def is_resolution_valid(args):
 
 if __name__ == "__main__":
     parser = create_args_parser()
-    #TODO: argparse error handling
     args = parser.parse_args()
     if  not is_resolution_valid(args):
         print(f"Incorrect video width or height. Possible values between 1 and {_MAX_ROW_VALUE}")
@@ -183,7 +182,6 @@ if __name__ == "__main__":
         args.scan = _PROGRESSIVE
     print("Reading PCAP file...\r\n")
     process_pcap(args)
-    args.filename.close()
     print("\r\nPCAP scan finished."
           f"\r\nPackets processed: {process_stat.packet_number}"
           f"\r\nPayloads found: {process_stat.found_payloads}")

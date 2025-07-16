@@ -83,7 +83,7 @@ class SampleRowData:
                 break
             seg = SampleRowDataSegment(header, segments_data[prev_srd_len:srd_len + prev_srd_len])
             segments.append(seg)
-            prev_srd_len = srd_len
+            prev_srd_len += srd_len
         return segments
 
             
